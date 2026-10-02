@@ -1,0 +1,5 @@
+Phase,Workload_Type,FCFS,SSTF,SCAN,C-SCAN,Learned_Selector,Oracle,Degradation_vs_Oracle(%)
+Phase 1: Sequential,sequential,841,816,1672,3693,816,794,2.77%
+Phase 2: Uniform Random,random,16923,3561,4425,6390,3561,3430,3.82%
+Phase 3: Bursty Hotspots,bursty,4362,1768,3551,5825,1768,1768,0.0%
+Phase 4: Mixed Shifts,mixed_shift,7579,2416,3367,5240,2416,2404,0.5%

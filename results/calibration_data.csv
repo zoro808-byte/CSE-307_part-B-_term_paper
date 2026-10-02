@@ -1,0 +1,6 @@
+Confidence_Bin,Sample_Count,Empirical_Accuracy,Mean_Confidence,Absolute_Error
+0.0-0.2,0,0.0,0.1,0.0
+0.2-0.4,0,0.0,0.3,0.0
+0.4-0.6,0,0.0,0.5,0.0
+0.6-0.8,6,0.5,0.7378,0.2378
+0.8-1.0,60,0.9833,0.9289,0.0544
