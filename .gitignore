@@ -4,3 +4,9 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 .system_generated/
+bin/
+*.aux
+*.log
+*.bbl
+*.blg
+*.out

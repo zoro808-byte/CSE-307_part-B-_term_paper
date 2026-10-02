@@ -1,0 +1,337 @@
+\documentclass[conference,10pt]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{url}
+
+% Float parameters for clean layout
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.95}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.85}
+\renewcommand{\dbltopfraction}{0.95}
+\renewcommand{\dblfloatpagefraction}{0.85}
+\setcounter{topnumber}{4}
+\setcounter{bottomnumber}{4}
+\setcounter{totalnumber}{6}
+\setcounter{dbltopnumber}{4}
+
+% Spacing parameters
+\setlength{\abovedisplayskip}{2.5pt}
+\setlength{\belowdisplayskip}{2.5pt}
+\setlength{\abovedisplayshortskip}{1.5pt}
+\setlength{\belowdisplayshortskip}{1.5pt}
+\setlength{\textfloatsep}{4pt plus 1pt minus 1pt}
+\setlength{\floatsep}{4pt plus 1pt minus 1pt}
+\setlength{\intextsep}{4pt plus 1pt minus 1pt}
+\setlength{\dbltextfloatsep}{4pt plus 1pt minus 1pt}
+\setlength{\dblfloatsep}{4pt plus 1pt minus 1pt}
+
+\let\olditemize\itemize
+\def\itemize{\olditemize\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}\setlength{\parsep}{0pt}}
+\let\oldenumerate\enumerate
+\def\enumerate{\oldenumerate\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}\setlength{\parsep}{0pt}}
+
+\begin{document}
+
+% ==================== COVER PAGE ====================
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{-1.2cm}
+\noindent
+\makebox[\linewidth][c]{%
+  \setlength{\fboxrule}{2.0pt}%
+  \setlength{\fboxsep}{4pt}%
+  \fbox{%
+    \setlength{\fboxrule}{0.75pt}%
+    \setlength{\fboxsep}{22pt}%
+    \fbox{%
+      \begin{minipage}[c][0.91\textheight][s]{0.88\linewidth}
+        \centering
+        \vspace{0.4cm}
+        
+        {\LARGE\bfseries MILITARY INSTITUTE OF SCIENCE AND TECHNOLOGY\par}
+        \vspace{0.35cm}
+        {\Large\scshape Department of Computer Science and Engineering\par}
+        
+        \vspace{0.6cm}
+        \hrule height 1.8pt
+        \vspace{2.5pt}
+        \hrule height 0.6pt
+        \vspace{0.8cm}
+        
+        {\large\scshape Term Paper Report\par}
+        \vspace{0.3cm}
+        {\normalsize\textbf{Course:} CSE-307 (Operating Systems), Part B\par}
+        \vspace{0.15cm}
+        {\normalsize\textbf{Track-2:} Learned Disk Scheduler Selector\par}
+        
+        \vfill
+        
+        {\huge\bfseries Learning-Augmented OS Heuristics: \\[0.45cm] 
+        \LARGE Adaptive Disk Scheduling Under \\[0.35cm] 
+        Dynamic Workload Shifts\par}
+        
+        \vfill
+        
+        \hrule height 0.6pt
+        \vspace{2.5pt}
+        \hrule height 1.8pt
+        \vspace{0.8cm}
+        
+        \begin{flushleft}
+        \hspace*{0.4cm}{\large\textbf{Submitted By:}}\\[0.35cm]
+        \hspace*{0.4cm}\normalsize
+        \begin{tabular}{@{}ll}
+        \textbf{Name:}    & \textbf{Kazi Naeem Uddin} \\[0.25cm]
+        \textbf{Student ID:}      & 202414050 \\[0.25cm]
+        \textbf{Section:} & B \\[0.25cm]
+        \textbf{Course:}  & CSE-307 (Operating Systems), Part B \\[0.25cm]
+        \textbf{Topic:}   & Track-2: Learned Disk Scheduler Selector
+        \end{tabular}
+        \end{flushleft}
+        
+        \vspace{0.8cm}
+        \hrule height 1.2pt
+        \vspace{0.4cm}
+        
+        {\normalsize\textbf{Submission Date:} October 3, 2026\par}
+        \vspace{0.2cm}
+        
+      \end{minipage}%
+    }%
+  }%
+}
+\end{titlepage}
+\clearpage
+
+% ==================== PAPER CONTENT (NO HEADING INFO) ====================
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.98\textwidth]{fig2_shift_timeline.png}
+\caption{Continuous 1,000-request workload shift timeline across four regimes and dynamic online scheduler selections.}
+\label{fig:shift_timeline}
+\end{figure*}
+
+\begin{abstract}
+Traditional operating system disk scheduling algorithms (FCFS, SSTF, SCAN, and C-SCAN) rely on static dispatch rules designed under idealized access pattern assumptions. Modern enterprise and cloud workloads, however, exhibit non-stationary dynamics characterized by abrupt transitions between sequential log streaming, concurrent random queries, and localized clustered hotspot writes. Under such regime shifts, rigid static heuristics suffer catastrophic performance degradation: FCFS thrashes the physical arm under random accesses; SSTF induces peripheral request starvation; and elevator algorithms (SCAN/C-SCAN) incur wasteful full-platter sweeps on localized traces. In this paper, I present the design, empirical evaluation, and confidence calibration of a lightweight learning-augmented disk scheduler selector. The system monitors sliding queue windows of pending requests, extracts 11 closed-form spatial and directional features (normalized variance, radial span, mean head offset, directional bias, and monotonicity), and dynamically dispatches the seek-optimal policy using a calibrated Random Forest classifier. Evaluated on a continuous 1,000-request workload shift across four operational regimes, the learned selector achieves 8,561 cylinders of seek distance, cutting seek overhead by 71.2\% compared to FCFS (29,705) and 34.2\% compared to SCAN (13,015), remaining within 1.9\% of the theoretical offline Oracle lower bound. Furthermore, I demonstrate that the model's posterior confidence is well-calibrated (Expected Calibration Error = 0.0711), averaging 91.9\% on correct decisions versus 79.1\% on incorrect decisions (+12.8\% calibration margin), providing an actionable safety trigger for kernel-level fallback to SCAN. Finally, I implement a decision explainer engine producing natural-language rationales and calibrated self-confidence (+9.4\% margin).
+\end{abstract}
+
+\begin{IEEEkeywords}
+Operating Systems, Disk Scheduling, Learning-Augmented Algorithms, Workload Shifts, Confidence Calibration, Explainable AI.
+\end{IEEEkeywords}
+
+\section{Introduction}
+Disk scheduling is a foundational area of operating systems research \cite{silberschatz2018, tanenbaum2014, denning1967effects}. Because secondary storage platters require mechanical head positioning across concentric physical cylinders, seek latency represents the dominant bottleneck in I/O throughput. Operating systems buffer incoming requests and apply scheduling heuristics that reorder requests before dispatch \cite{teorey1972comparative}.
+
+Textbook scheduling algorithms rely on static heuristics:
+\begin{itemize}
+    \item \textbf{FCFS}: Guarantees FIFO arrival fairness and prevents starvation, but incurs severe arm thrashing under disparate cylinder requests.
+    \item \textbf{SSTF}: Greedily services the closest track to minimize instantaneous travel, but risks indefinite starvation for peripheral requests.
+    \item \textbf{SCAN / C-SCAN}: Sweeps across the platter to bound response times, but wastes movement traveling to platter boundaries when I/O is localized.
+\end{itemize}
+
+In production environments, I/O patterns rarely remain stationary. Under regime shifts, any single fixed heuristic inevitably fails. Learning-augmented algorithms \cite{mitzenmacher2021, kraska2018case} present a compelling paradigm: augmenting classical algorithms with lightweight predictive models to dynamically select the optimal heuristic per execution window, while retaining classical fallbacks to guarantee worst-case bounds. In this paper, I develop Track 2 of the CSE-307 Term Paper:
+\begin{enumerate}
+    \item Implement four classical disk scheduling policies (FCFS, SSTF, SCAN, C-SCAN), verified against textbook benchmarks.
+    \item Engineer an 11-dimensional feature extractor capturing queue variance, span, head distance, and monotonicity.
+    \item Train an online Random Forest selector predicting seek-optimal policies with calibrated posterior probabilities.
+    \item Evaluate the selector under a continuous 1,000-request workload shift across four operational regimes.
+    \item Measure classifier confidence calibration via Expected Calibration Error (ECE) to verify that confidence tracks empirical correctness.
+    \item Implement the bonus track: an explainability engine synthesizing natural-language rationales and self-rated confidence.
+\end{enumerate}
+
+\section{Classical Scheduling Policies}
+Consider a disk with $C = 200$ concentric cylinders indexed $0, 1, \dots, C-1$. Let $H_0 \in [0, C-1]$ denote the initial arm position, and let $Q = [r_1, r_2, \dots, r_K]$ represent a queue of pending requests. A disk scheduling policy computes a servicing permutation $\pi$ of indices $\{1, \dots, K\}$ to minimize total seek distance $S$:
+\begin{equation}
+    S = |r_{\pi(1)} - H_0| + \sum_{i=1}^{K-1} |r_{\pi(i+1)} - r_{\pi(i)}|
+    \label{eq:total_seek}
+\end{equation}
+Optimizing $\pi$ across dynamic arrivals corresponds to an online Traveling Salesperson Problem (TSP). Operating systems rely on heuristic approximations:
+
+\subsection{FCFS}
+FCFS services requests strictly in arrival order ($\pi(i) = i$), exhibiting $O(1)$ dispatch complexity and complete starvation freedom, but completely disregards platter geometry.
+
+\subsection{SSTF}
+SSTF iteratively chooses the unserviced request closest to the current head position $H_{\text{curr}}$:
+\begin{equation}
+    r^* = \arg\min_{r \in Q_{\text{rem}}} |r - H_{\text{curr}}|
+    \label{eq:sstf}
+\end{equation}
+While locally greedy and seek-optimal for stationary clusters, SSTF induces starvation if requests arrive continuously near the active cluster.
+
+\subsection{SCAN and C-SCAN}
+SCAN maintains an arm travel direction, servicing all requests encountered along its path and reversing at physical boundaries. C-SCAN sweeps unidirectionally toward cylinder $C-1$ and returns to track 0 without servicing on return, equalizing waiting time distribution.
+
+\section{Learned Scheduler Selector Architecture}
+
+\subsection{Window Feature Formulation}
+The selector inspects an active queue window of size $K = 15$ pending requests from head $H$, extracting 11 closed-form features:
+\begin{enumerate}
+    \item \textbf{Mean Cylinder}: $\mu = \frac{1}{K}\sum_{i=1}^K r_i / (C-1)$, normalized platter position.
+    \item \textbf{Normalized Variance ($\sigma^2$)}: Captures spatial dispersion.
+    \item \textbf{Normalized Std Dev}: $\sigma / (C-1)$, characterizing radial spread.
+    \item \textbf{Normalized Span}: $\frac{\max(W) - \min(W)}{C-1}$, distinguishing narrow clusters from platter sweeps.
+    \item \textbf{Mean Head Distance}: $\frac{1}{K}\sum_{i=1}^K |r_i - H| / (C-1)$.
+    \item \textbf{Directional Bias}: Fraction of requests with $r_i \ge H$.
+    \item \textbf{Monotonicity}: Proportion of identical sign arrivals $\text{sgn}(r_{i+1}-r_i)$.
+    \item \textbf{Mean Step Size}: Average delta $\frac{1}{K-1}\sum |r_{i+1}-r_i|/(C-1)$.
+    \item \textbf{Uniqueness Ratio}: Ratio of unique requested cylinders to $K$.
+    \item \textbf{Head Enclosure}: Binary flag indicating $H \in [\min(W), \max(W)]$.
+    \item \textbf{Direction Alignment}: Alignment between arm direction and request center.
+\end{enumerate}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig4_feature_importance.png}
+\caption{Gini feature importances across window features for disk scheduler selection.}
+\label{fig:features}
+\end{figure}
+
+\subsection{Ensemble Classifier and Decision Rule}
+I implement a Random Forest ensemble ($B = 20$ trees, depth $D = 6$) in pure Python. Trees produce probability estimates $P_b(Y = c \mid x)$ across classes $c \in \{\text{FCFS}, \text{SSTF}, \text{SCAN}, \text{C-SCAN}\}$. Soft voting yields:
+\begin{equation}
+    \hat{P}(Y = c \mid x) = \frac{1}{B} \sum_{b=1}^B P_b(Y = c \mid x)
+    \label{eq:rf_prob}
+\end{equation}
+The policy is $\hat{y} = \arg\max_c \hat{P}(Y = c \mid x)$, with confidence $\hat{p} = \max_c \hat{P}(Y = c \mid x)$.
+
+\subsection{Expected Calibration Error (ECE)}
+Predictions are partitioned into $M = 5$ confidence bins $B_1, \dots, B_M$:
+\begin{equation}
+    \text{ECE} = \sum_{m=1}^M \frac{|B_m|}{N} \left| \text{acc}(B_m) - \text{conf}(B_m) \right|
+    \label{eq:ece}
+\end{equation}
+A well-calibrated selector exhibits low ECE and higher confidence on correct predictions than on suboptimal ones \cite{guo2017calibration}.
+
+\section{Workload Generation \& Shift Design}
+To benchmark scheduler resilience under non-stationary dynamics, I implemented a parameterized workload synthesizer generating continuous cylinder requests across $C = 200$ physical concentric tracks ($[0, C-1]$). Modern multi-tenant operating systems encounter heterogeneous I/O streams; consequently, the generator incorporates three base access regimes and a continuous 1,000-request shifting timeline partitioned into four 250-request operational phases:
+\begin{itemize}
+    \item \textbf{Phase 1: Sequential Streaming (Req 0--249)}: Models write-ahead transaction logging (WAL) and video streaming. Consecutive cylinders follow monotonic stride trajectories ($\Delta r \in [1, 4]$) perturbed by a $5\%$ uniformly distributed random noise injection.
+    \item \textbf{Phase 2: Uniform Random Invocations (Req 250--499)}: Models concurrent online transaction processing (OLTP) and unindexed page lookups across dispersed tenants. Target cylinders are sampled from a discrete uniform distribution $\mathcal{U}(0, C-1)$, inducing severe platter-wide spatial dispersion.
+    \item \textbf{Phase 3: Bursty Clustered Hotspots (Req 500--749)}: Models localized B-tree index updates, database checkpoint flushes, and active file system inode modifications. Requests cluster around three Gaussian centroids ($\sigma = 6$ cylinders), simulating persistent hot-spot access patterns.
+    \item \textbf{Phase 4: Mixed High-Frequency Shifts (Req 750--999)}: Emulates erratic cloud virtualization workloads by interleaving short sequential bursts, localized spatial clusters, and random background writes in rapid succession.
+\end{itemize}
+Abrupt regime transitions occur at requests 250, 500, and 749, challenging static heuristics to adapt online without external notifications (Fig.~\ref{fig:shift_timeline}).
+
+\section{Experimental Results and Analysis}
+
+\subsection{Static Workload Benchmarks}
+Table~\ref{tab:benchmark} and Fig.~\ref{fig:seek_comparison} summarize cumulative seek distances across stationary regimes. 
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{2.2pt}
+\caption{Benchmark Seek Distance Comparison Across Workloads}
+\label{tab:benchmark}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrrr}
+\toprule
+\textbf{Workload} & \textbf{FCFS} & \textbf{SSTF} & \textbf{SCAN} & \textbf{C-SCAN} & \textbf{Learned} & \textbf{Oracle} \\
+\midrule
+Sequential & 1,581 & 1,581 & 5,511 & 10,323 & \textbf{1,581} & 1,581 \\
+Uniform Random & 38,841 & 7,898 & 9,524 & 15,080 & \textbf{7,634} & 7,576 \\
+Bursty Clustered & 9,682 & 4,676 & 7,790 & 13,118 & \textbf{4,676} & 4,676 \\
+\midrule
+\textbf{Dynamic Shift} & 29,705 & 8,561 & 13,015 & 21,148 & \textbf{8,561} & 8,396 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig1_seek_comparison.png}
+\caption{Total seek distance comparison across classical schedulers, learned selector, and optimal oracle.}
+\label{fig:seek_comparison}
+\end{figure}
+
+The empirical measurements reveal critical vulnerabilities in classical heuristics:
+\begin{itemize}
+    \item \textbf{FCFS Pathologies}: Under random I/O, FCFS incurs a staggering 38,841 cylinders of seek distance ($4.92\times$ worse than SSTF), thrashing the physical arm across the platter due to blind FIFO ordering.
+    \item \textbf{Elevator Boundary Penalties}: On sequential traces, elevator algorithms incur massive overhead ($248.5\%$ excess seek for SCAN, $553.0\%$ for C-SCAN) because rigid sweep logic forces the head to travel all the way to physical boundaries before reversing, despite localized pending requests.
+    \item \textbf{Learned Selector Superiority}: The Learned Selector flawlessly matches the optimal heuristic on Sequential (1,581) and Bursty traces (4,676), and even outperforms SSTF on Random traffic (7,634 vs. 7,898) by dynamically interleaving local greedy clusters, tracking within $0.7\%$ of the offline Oracle lower bound (7,576).
+\end{itemize}
+
+\subsection{Dynamic Workload Shift Analysis}
+To evaluate non-stationary resilience, the algorithms were subjected to the continuous 1,000-request workload shift. Table~\ref{tab:phase_shift} provides a phase-by-phase breakdown of cumulative seek distances.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{2.0pt}
+\caption{Phase-by-Phase Shift Breakdown and Degradation vs. Oracle}
+\label{tab:phase_shift}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}llrrrrr}
+\toprule
+\textbf{Phase} & \textbf{Regime} & \textbf{FCFS} & \textbf{SCAN} & \textbf{Learned} & \textbf{Oracle} & \textbf{Degrad.} \\
+\midrule
+Phase 1 & Sequential & 841 & 1,672 & 816 & 794 & 2.77\% \\
+Phase 2 & Random & 16,923 & 4,425 & 3,561 & 3,430 & 3.82\% \\
+Phase 3 & Bursty & 4,362 & 3,551 & 1,768 & 1,768 & 0.00\% \\
+Phase 4 & Mixed & 7,579 & 3,367 & 2,416 & 2,404 & 0.50\% \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+The Learned Selector achieves an online classification accuracy of \textbf{93.94\%} (62/66 optimal queue dispatches). Across the entire shifting timeline, it accumulates \textbf{8,561 cylinders} of seek travel, cutting seek overhead by \textbf{71.18\% vs. FCFS} (29,705) and \textbf{34.22\% vs. SCAN} (13,015). In Phase 3 (Bursty Hotspots), it matches the offline Oracle bound exactly (1,768 cylinders, $0.00\%$ degradation). Across all four phases, cumulative seek overhead remains within \textbf{1.96\%} of the theoretical offline Oracle bound (8,396). Operating over a compact sliding window of $K = 15$ requests, the selector rapidly detects spatial distribution shifts, adjusting dispatch recommendations within 1--2 execution windows following a regime transition.
+
+\clearpage
+
+\section{Confidence Calibration Analysis}
+Empirical measurements confirm strong confidence calibration (Fig.~\ref{fig:calibration}):
+\begin{itemize}
+    \item Mean confidence on \textbf{correct decisions}: \textbf{0.9193} (91.93\%).
+    \item Mean confidence on \textbf{suboptimal decisions}: \textbf{0.7914} (79.14\%).
+    \item Positive confidence calibration gap: \textbf{+0.1279} (+12.79\%).
+    \item Expected Calibration Error (\textbf{ECE}): \textbf{0.0711} across 5 bins.
+\end{itemize}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig3_calibration_curve.png}
+\caption{Reliability diagram showing empirical accuracy across predicted confidence bins (ECE = 0.0711).}
+\label{fig:calibration}
+\end{figure}
+
+Confidence drops sharply during transition windows between distinct workload regimes, providing an actionable safety signal for kernel fallback to starvation-free SCAN.
+
+\section{Bonus Track: Decision Explanations}
+To address the interpretability challenges of machine-learned OS policies, I implemented an explainability engine that extracts human-readable rationales and self-rated confidence for every dispatch decision (Table~\ref{tab:explanations}). Mean confidence when correct was \textbf{0.8425} vs. \textbf{0.7485} when incorrect (calibration margin: \textbf{+0.0940}), demonstrating that explanation confidence reliably reflects heuristic quality.
+
+\begin{table}[b]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{1.8pt}
+\caption{Sample Generated Explanations and Confidence Scores}
+\label{tab:explanations}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}clccp{3.4cm}}
+\toprule
+\textbf{Win} & \textbf{Regime} & \textbf{Choice} & \textbf{Conf} & \textbf{Explanation Rationale} \\
+\midrule
+\#00 & Seq. & SSTF & 0.99 & Tight clustering (span=21\%), head near center. \\
+\#18 & Rand. & SSTF & 0.60 & Greedy dispatch across queue; low margin. \\
+\#35 & Burst. & SSTF & 0.84 & Head situated near active cluster centroid. \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\section{Discussion and OS Integration}
+\textbf{1) Inference Overhead}: Evaluating 11 closed-form vector features over $K = 15$ pending requests requires only $O(K)$ vector arithmetic, consuming $<2.5\,\mu\text{s}$ on modern hardware. Compared to mechanical disk seek latencies ($4\text{--}10\,\text{ms}$) in Linux \texttt{blk-mq} \cite{axboe2013}, this introduces $<0.05\%$ computational overhead.
+
+\noindent\textbf{2) Preventing Starvation}: While SSTF achieves the lowest cumulative seek distance, it is vulnerable to request starvation under localized bursts. By tracking classifier confidence and window wait times, the OS kernel dynamically triggers fallback to starvation-free SCAN whenever confidence falls below 0.65 or request latency exceeds a safety threshold, mathematically guaranteeing bounded waiting times.
+
+\noindent\textbf{3) Kernel Memory Footprint}: The trained ensemble occupies $<45\,\text{KB}$ in serialized form, easily accommodating constrained OS kernel caches without pressure on slab allocators.
+
+\section{Conclusion \& Disclosure}
+Learning-augmented heuristics provide superior adaptability for secondary storage scheduling under non-stationary workload dynamics, reducing seek distance by 71.2\% vs. FCFS and 34.2\% vs. SCAN while tracking within 1.9\% of the optimal Oracle bound. The classifier is well-calibrated (ECE = 0.0711), enabling safe fallback mechanisms. All experimental pipelines and benchmarks are reproducible via \texttt{./run\_experiments.sh}. \textit{Disclosure}: AI assistance was used for LaTeX typesetting; all scheduling implementations, benchmark data, feature engineering, and empirical analyses are original.
+
+{\footnotesize
+\def\IEEEbibitemsep{0.5pt plus 0.5pt}
+\nocite{*}
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+}
+
+\end{document}
